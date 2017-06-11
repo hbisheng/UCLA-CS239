@@ -1,14 +1,14 @@
-function [predicted, RMSE] = hr_svm_predict(data, fs, hr, model)
+function [predicted, err] = pos_svm_predict(data, fs, pos, model)
     % Simply aggregate them.
     data = sqrt(data(:,:,1).^2 + data(:,:,2).^2 + data(:,:,3).^2);
     features = fq_feature_extract(data, fs);
     % Predict.
     predicted = predict(model, features);
-    RMSE = computeRMSE(predicted, hr);
-    fprintf('RMSE: %f', RMSE);
+    err = sum(predicted ~= pos) / length(pos);
+    fprintf('RMSE: %f', err);
     % Plot the prediction result
     figure;
-    scatter(hr, predicted);
+    scatter(pos, predicted);
 %     plot(hr);
 %     hold on;
 %     plot(predicted);
