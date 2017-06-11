@@ -1,4 +1,4 @@
-function hr = predict_heart_rate_still(x, y, z, freq, draw)
+function [rates_and_power, true_power] = predict_heart_rate_still(x, y, z, freq, draw, true_hr)
     xx = filter_one_component(x, freq, draw);
     yy = filter_one_component(y, freq, draw);
     zz = filter_one_component(z, freq, draw);
@@ -9,8 +9,6 @@ function hr = predict_heart_rate_still(x, y, z, freq, draw)
     
     [b, a] = butter(1, [40, 180] / 60 / freq * 2);
     pulse = filter(b, a, agg);
-
-%     pulse = agg;
     
     % Take the FFT.
     L = length(agg);
@@ -20,16 +18,24 @@ function hr = predict_heart_rate_still(x, y, z, freq, draw)
     P1(2:end-1) = 2*P1(2:end-1);
     f = freq*(0:(L/2))/L;
     
-    hr = 0;
-    tmp = P1;
-    for cnt = 1:1
-        [~, I] = max(tmp);
-%         if 60 * f(I) > 180
-%             tmp(I) = -Inf;
-%             continue;
-%         end
-        hr = max(hr, 60 * f(I));
+    P1_temp = P1;
+    
+    top_num = 5;
+    rates_and_power = zeros(top_num, 2);
+    cnt = 1;
+    while cnt <= top_num
+        [power, I] = max(P1_temp);
+        if 40 < 60 * f(I) && 60 * f(I) < 180 && power < 1
+            rates_and_power(cnt, 1) = 60 * f(I);
+            rates_and_power(cnt, 2) = power;
+            cnt = cnt + 1;
+        end
+        P1_temp(I) = -Inf;
     end
+    
+    upper_bound = floor( (true_hr+3) * L / 60 / freq + 1);
+    lower_bound = ceil( (true_hr-3) * L / 60 / freq + 1);
+    true_power = max(P1(lower_bound:upper_bound));
     
     if draw
         figure();
