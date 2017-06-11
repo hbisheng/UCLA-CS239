@@ -3,6 +3,10 @@
 % data: each row is a sample.
 % fs: the sampling frequence.
 function fq_feature = fq_feature_extract(data, fs)
+    % Filter with 2nd butterworth.
+%     [b, a] = butter(1, [0.66, 2.5] / fs * 2);
+%     data = filter(b, a, data, [], 2);
+    % Do FFT.
     Y = fft(data')';
     L = size(data, 2);
     P2 = abs(Y / L);
