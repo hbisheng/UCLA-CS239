@@ -42,10 +42,6 @@ final_test_hr = zeros(final_test_n * 3, 1);
 for folder_idx = 1 : length(folders_name)
     prefix = folders_name{folder_idx};
     polar_data = csvread([prefix '/polar.csv'], 3, 0);
-<<<<<<< HEAD
-%     polar_hr = polar_data(interval_length:end, 3);
-=======
->>>>>>> 99c40ec342353c7340cdba78dc055cec75cdb2f6
     polar_hr = polar_data(:, 3);
     
     acc_file  = '1_android.sensor.accelerometer.data.csv';    
