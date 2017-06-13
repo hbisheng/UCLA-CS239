@@ -8,8 +8,7 @@ folders_name = {'20170530_bs_sit', '20170611_bs_walk_pocket', '20170530_bs_runni
 acc_sampling_rate = 250;
 % Sampling rate for gyroscope.
 gyro_sampling_rate = 150;
-% Use which data. 1 for accelerometer, 0 for gyroscope.
-use_acc = 0;
+% Use which data. 1 for accelerometer, 0 otherwi
 
 % Sliding window step.
 interval_shift = 1 * 1; % seconds
@@ -85,11 +84,7 @@ end
 random_indice = randperm(total_segment);
 kfold = 5;
 fold_len = floor(length(random_indice) / kfold);
-if use_acc
-    sampling_rate = acc_sampling_rate
-else
-    sampling_rate = gyro_sampling_rate;
-end
+sampling_rate = gyro_sampling_rate;
 
 for k = 1 : 1
     % Train a svm for each pos.
@@ -106,15 +101,9 @@ for k = 1 : 1
         tr = r(1:bar);
         te = r(bar+1:end);
         % Prepare the data using gyroscope.
-        if use_acc
-            train_data = squeeze(per_file_acc_segments(fid, tr, :, :));
-            test_data = squeeze(per_file_acc_segments(fid, te, :, :));
-        else
-            train_data = squeeze(per_file_gyro_segments(fid, tr, :, :));
-            test_data = squeeze(per_file_gyro_segments(fid, te, :, :));
-        end
+        train_data = squeeze(per_file_gyro_segments(fid, tr, :, :));
         train_hr = per_file_polar_label(fid, tr)';
-       
+        test_data = squeeze(per_file_gyro_segments(fid, te, :, :));
         test_hr = per_file_polar_label(fid, te)';
         pos_train_data = [pos_train_data; train_data];
         pos_train_label = [pos_train_label; ones(size(train_hr, 1), 1) * fid];
@@ -145,11 +134,7 @@ for k = 1 : 1
     scatter(pos_test_hr, predicted);
     
     % Do a final test using gyroscope data.
-    if use_acc
-        pos_test_data = final_test_acc_segments(1:total_final_segments, :, :);
-    else
-        pos_test_data = final_test_gyro_segments(1:total_final_segments, :, :);
-    end
+    pos_test_data = final_test_gyro_segments(1:total_final_segments, :, :);
     pos_test_hr = final_test_hr(1:total_final_segments, :);
     predicted = zeros(size(pos_test_hr));
     for i = 1 : size(pos_test_hr, 1)
@@ -158,6 +143,7 @@ for k = 1 : 1
         feature = fq_feature_extract(data, sampling_rate);
         label = predict(posModel, feature);
         predicted(i) = predict(models{label}, feature);
+%         fprintf('label = %d, heart = %d, max(feature) = %d\n', label, predicted(i), max(feature));
     end
     RMSE = computeRMSE(pos_test_hr, predicted);
     RMSE_sitting = computeRMSE(pos_test_hr(1:final_test_n), predicted(1:final_test_n));
