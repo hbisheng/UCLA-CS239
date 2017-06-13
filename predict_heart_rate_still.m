@@ -25,7 +25,7 @@ function [rates_and_power, true_power] = predict_heart_rate_still(x, y, z, freq,
     cnt = 1;
     while cnt <= top_num
         [power, I] = max(P1_temp);
-        if 40 < 60 * f(I) && 60 * f(I) < 180 && power < 1
+        if 40 < 60 * f(I) && 60 * f(I) < 180
             rates_and_power(cnt, 1) = 60 * f(I);
             rates_and_power(cnt, 2) = power;
             cnt = cnt + 1;
@@ -35,20 +35,44 @@ function [rates_and_power, true_power] = predict_heart_rate_still(x, y, z, freq,
     
     upper_bound = floor( (true_hr+3) * L / 60 / freq + 1);
     lower_bound = ceil( (true_hr-3) * L / 60 / freq + 1);
-    true_power = max(P1(lower_bound:upper_bound));
+    if lower_bound > upper_bound
+        true_power = 0
+    else
+        true_power = max(P1(lower_bound:upper_bound));
+    end
     
     if draw
         figure();
-        subplot(2, 1, 1);
-        plot(agg);
-        subplot(2, 1, 2);
+        plot([x y z]);
+        legend('X', 'Y', 'Z')
+        xlabel('time')
+        ylabel('signal')
+        title('Running, raw time series, window length = 30s')
+        set(gca,'fontsize',15)
+        
+        figure();
         plot(pulse);
+        xlabel('time')
+        ylabel('signal')
+        title('Running, extracted pulse wave, window length = 30s')
+        set(gca,'fontsize',15)
         
         figure();
         plot(f * 60, P1);
-        title(['Single-Sided Amplitude Spectrum of S(t) HR:', num2str(hr)])
-        xlabel('f (Hz)')
+        title(['Single-Sided Amplitude Spectrum of S(t)'])
+        xlabel('f (times per minutes)')
         ylabel('|P1(f)|') 
-        pause
+        set(gca,'fontsize',15)
+        
+%         subplot(3, 1, 2);
+%         plot(agg);
+%         subplot(3, 1, 3);
+%         plot(pulse);
+        
+%         figure();
+%         plot(f * 60, P1);
+%         title(['Single-Sided Amplitude Spectrum of S(t) HR:'])
+%         xlabel('f (Hz)')
+%         ylabel('|P1(f)|') 
     end
 end

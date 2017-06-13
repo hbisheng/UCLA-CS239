@@ -3,19 +3,13 @@
 % freq: the frequence of the input vector (sample/second)
 function y = filter_one_component(x, freq, draw)
 %     x_normed = normalize_z_score(x);
-%     Set the averaging window to 1/7 second.
 %     window = floor(freq / 7);
 %     x_avg = average_filter(x_normed, window);
 %     y = x_avg;
 
     window = hamming(floor(freq / 7));
-    x_avg = conv(x, window);
-    
-    % 2nd order butter-worth bandpass filter
-    % with cutoff frequence 4 to 11 Hz.
+    x_avg = conv(x, window);    
     [b, a] = butter(1, [40, 180] / 60 / freq * 2);
-%     [b, a] = butter(1, [4, 11] / freq * 2);
-
     y = filter(b, a, x_avg);
     
     if 0

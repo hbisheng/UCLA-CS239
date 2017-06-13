@@ -22,7 +22,8 @@ per_file_total_segments = zeros(length(folders_name), 1);
 for folder_idx = 1 : length(folders_name)
     prefix = folders_name{folder_idx};
     polar_data = csvread([prefix '/polar.csv'], 3, 0);
-    polar_hr = polar_data(interval_length:end, 3);
+%     polar_hr = polar_data(interval_length:end, 3);
+    polar_hr = polar_data(:, 3);
     
     acc_file  = '1_android.sensor.accelerometer.data.csv';    
     gyro_file = '4_android.sensor.gyroscope.data.csv';
@@ -35,16 +36,17 @@ for folder_idx = 1 : length(folders_name)
     
     acc_segment_num = floor((size(resampled_acc_M, 1) - 1 - interval_length*acc_sampling_rate) / (interval_shift*acc_sampling_rate) + 1);
     gyro_segment_num = floor((size(resampled_gyro_M, 1) - 1 - interval_length*gyro_sampling_rate) / (interval_shift*gyro_sampling_rate) + 1);
+    polar_segment_num = floor( (length(polar_hr) - interval_length) / interval_shift + 1);
     
 %     for segment_idx = 1: 600
-    for segment_idx = 1: min([acc_segment_num, gyro_segment_num, length(polar_hr)])
+    for segment_idx = 1: min([acc_segment_num, gyro_segment_num, polar_segment_num])
         per_file_total_segments(folder_idx) = per_file_total_segments(folder_idx) + 1;
         total_segment = total_segment + 1;
         acc_segments(total_segment, :, :) = resampled_acc_M( interval_shift*acc_sampling_rate * (segment_idx-1) + 1: interval_shift*acc_sampling_rate * (segment_idx-1) + interval_length*acc_sampling_rate,:);
         per_file_acc_segments(folder_idx, segment_idx, :, :) = acc_segments(total_segment, :, :);
         gyro_segments(total_segment, :, :) = resampled_gyro_M( interval_shift*gyro_sampling_rate * (segment_idx-1) + 1: interval_shift*gyro_sampling_rate * (segment_idx-1) + interval_length*gyro_sampling_rate,:);
         per_file_gyro_segments(folder_idx, segment_idx, :, :) = gyro_segments(total_segment, :, :);
-        polar_label(total_segment) = polar_hr(segment_idx);
+        polar_label(total_segment) = mean( polar_hr( (segment_idx-1) * interval_shift+1 : (segment_idx-1) * interval_shift + interval_length ) );
         per_file_polar_label(folder_idx, segment_idx, :) = polar_label(total_segment);
         file_label(total_segment) = folder_idx;
     end
@@ -88,6 +90,7 @@ for k = 1 : 1
         models{fid} = hr_svm_train(train_data, acc_sampling_rate, train_hr);
         [~, testRMSE] = hr_svm_predict(test_data, acc_sampling_rate, test_hr, models{fid});
     end
+    
     % Train a pos classifier.
     [posModel, err] = pos_svm_train(pos_train_data, acc_sampling_rate, pos_train_label);
 %     [posPredicted, posErr] = pos_svm_predict(acc_segments(test_indice, :, :), acc_sampling_rate, file_label(test_indice), posModel);
