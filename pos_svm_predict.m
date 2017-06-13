@@ -5,7 +5,7 @@ function [predicted, err] = pos_svm_predict(data, fs, pos, model)
     % Predict.
     predicted = predict(model, features);
     err = sum(predicted ~= pos) / length(pos);
-    fprintf('RMSE: %f', err);
+    fprintf('RMSE: %f\n', err);
     % Plot the prediction result
     figure;
     scatter(pos, predicted);
